@@ -74,11 +74,45 @@
                 </div>
             </div>
         </div>
+        <div class="row">
+            <footer class="col-md-12">
+                <reported-notes></reported-notes>
+            </footer>
+        </div>
     </div>
     <script>
         (function () {
             'use strict';
             var app = angular.module('app', ['app.part1', 'app.part2']);
+            angular.module('app.observe', [])
+            .factory('noteFactory', function () {
+                var factory = {};
+                factory.notes = [];
+                factory.subscribers = [];
+                factory.makeNote = function (note) {
+                    factory.notes.push(note);
+                };
+                factory.subscribe = function (callback) {
+                    factory.subscribers.push(callback);
+                };
+                return factory;
+            })
+            .directive('reportedNotes', function (noteFactory) {
+                return {
+                    restrict: 'E',
+                    replace: true,
+                    template: '<pre><div ng-repeat="note in ctrl.notes">{{note}}</div></pre>',
+                    controllerAs: 'ctrl',
+                    controller: function (noteFactory) {
+                        var vm = this;
+                        vm.notes = noteFactory.notes;
+                        vm.update = function update(data) {
+                            vm.notes = data;
+                        };
+                        noteFactory.subscribe(vm.update);
+                    }
+                };
+            });
             angular.module('app.github', [])
             .constant('apiV3', function () {
                 return {
@@ -88,7 +122,7 @@
                     and: 'https://api.github.com'
                 };
             });
-            angular.module('app.part1', ['app.github'])
+            angular.module('app.part1', ['app.github', 'app.observe'])
             .controller('ControllerOne', function ControllerOne() {
                 var vm = this;
                 vm.about = 'ControllerOne lists a preset number of GitHub users.';
@@ -101,7 +135,7 @@
 
                 };
             });
-            angular.module('app.part2', ['app.github']);
+            angular.module('app.part2', ['app.github', 'app.observe']);
         })();
     </script>
 </body>
