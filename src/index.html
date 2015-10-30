@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html ng-app="app">
 <head>
     <title>Assorted Angular Examples</title>
@@ -62,13 +62,13 @@
                     <small>Understanding Scope/Controllers and Directives</small>
                 </h1>
 
-                <div ng-controller="ControllerOne as ctrl">
+                <div ng-controller="ControllerOne as ctrl_1">
                     <p>{{ctrl.about}}</p>
-                    <div ng-repeat="person in ctrl.userNames">
+                    <div ng-repeat="person in ctrl_1.userNames">
                         <h4>
                             {{person}}
                             &ndash;
-                            <small><a ng-click="ctrl.getData(person)"><span class="fa fa-refresh"></span> Fetch Data</a></small>
+                            <small><a ng-click="ctrl_1.getData(person)"><span class="fa fa-refresh"></span> Fetch Data</a></small>
                         </h4>
                     </div>
                 </div>
@@ -91,6 +91,10 @@
                 factory.subscribers = [];
                 factory.makeNote = function (note) {
                     factory.notes.push(note);
+                    factory.subscribers.forEach(function (element, index, array) {
+                        if (angular.isFunction(element))
+                            element(factory.notes);
+                    });
                 };
                 factory.subscribe = function (callback) {
                     factory.subscribers.push(callback);
@@ -101,9 +105,10 @@
                 return {
                     restrict: 'E',
                     replace: true,
-                    template: '<pre><div ng-repeat="note in ctrl.notes">{{note}}</div></pre>',
-                    controllerAs: 'ctrl',
+                    template: '<pre><div ng-repeat="note in rpt.notes">{{note}}</div></pre>',
+                    controllerAs: 'rpt',
                     controller: function (noteFactory) {
+                        noteFactory.makeNote('Start <reported-notes>');
                         var vm = this;
                         vm.notes = noteFactory.notes;
                         vm.update = function update(data) {
@@ -123,7 +128,8 @@
                 };
             });
             angular.module('app.part1', ['app.github', 'app.observe'])
-            .controller('ControllerOne', function ControllerOne() {
+            .controller('ControllerOne', function ControllerOne(noteFactory) {
+                noteFactory.makeNote('Start ControllerOne');
                 var vm = this;
                 vm.about = 'ControllerOne lists a preset number of GitHub users.';
                 vm.userNames = ['dgilleland', 'dagilleland'];
@@ -134,6 +140,7 @@
                 function getData(githubUserName) {
 
                 };
+                noteFactory.makeNote('End ControllerOne');
             });
             angular.module('app.part2', ['app.github', 'app.observe']);
         })();
